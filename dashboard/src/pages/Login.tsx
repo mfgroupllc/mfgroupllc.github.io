@@ -32,9 +32,10 @@ export const LoginPage: React.FC = () => {
   }, [isAuthenticated]);
 
   const handleLogin = () => {
-    // Redirect to API domain to trigger Cloudflare Access authentication
-    // The API should redirect back to the dashboard after successful auth
-    window.location.href = API_URL;
+    // Redirect to API's auth endpoint which triggers Cloudflare Access login
+    // After authentication, the API redirects back to the dashboard
+    const returnUrl = encodeURIComponent(window.location.origin + '/dashboard/portfolio');
+    window.location.href = `${API_URL}/auth/login?redirect=${returnUrl}`;
   };
 
   if (isRedirecting) {
