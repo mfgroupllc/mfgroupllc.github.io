@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useMemo } from 'react';
-import { usePortfolio, useBots } from '../hooks/useApi';
+import { usePortfolio } from '../hooks/useApi';
 import { Position, PortfolioPnlPoint } from '../types/api';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
