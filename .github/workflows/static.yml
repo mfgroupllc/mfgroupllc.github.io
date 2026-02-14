@@ -45,14 +45,27 @@ jobs:
           npm ci
           npm run build
 
+      - name: Prepare deployment files
+        run: |
+          # Copy built dashboard files to deployment location
+          rm -rf dashboard-deploy
+          mkdir -p dashboard-deploy
+          cp -r dashboard/dist/* dashboard-deploy/
+
+          # Create deployment directory structure
+          mkdir -p _site
+          cp -r assets _site/
+          cp index.html cover.css README.md _site/ 2>/dev/null || true
+          mv dashboard-deploy _site/dashboard
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Upload entire repository (including built dashboard)
-          path: '.'
+          # Upload prepared site with built dashboard
+          path: '_site'
 
       - name: Deploy to GitHub Pages
         id: deployment
