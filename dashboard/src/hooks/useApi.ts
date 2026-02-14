@@ -1,11 +1,10 @@
 /**
  * API Polling and Data Fetching Hook
- * Manages REST API calls with JWT authentication and automatic polling
+ * Manages REST API calls with Cloudflare Access authentication
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { PortfolioSummary, Transaction, LogEntry, BotStatus, ListResponse } from '../types/api';
-import { getAuthHeader } from './useAuth';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
@@ -17,36 +16,56 @@ interface ApiError {
 
 /**
  * Base API client hook
- * Handles authentication, error handling, and request configuration
+ * Handles Cloudflare Access authentication via cookies, error handling, and request configuration
  */
 export const useApi = () => {
   const [error, setError] = useState<ApiError | null>(null);
 
   /**
    * Make authenticated API request
+   * Authentication is handled by Cloudflare Access cookies (CF_Authorization)
    * @param endpoint - API endpoint (e.g., '/api/portfolio')
-   * @param token - JWT authentication token
    * @param options - Fetch options
    */
   const request = useCallback(
     async <T,>(
       endpoint: string,
-      token: string | null,
       options: RequestInit = {}
     ): Promise<T | null> => {
       try {
         const headers = {
           'Content-Type': 'application/json',
-          ...getAuthHeader(token),
           ...options.headers,
         };
 
         const response = await fetch(`${API_URL}${endpoint}`, {
           ...options,
           headers,
+          credentials: 'include', // CRITICAL: Allows Cloudflare CF_Authorization cookie to be sent
         });
 
+        // Cloudflare Access specific check:
+        // If the token is invalid/expired, Cloudflare often redirects (302) to a login HTML page.
+        // Fetch follows redirects transparently, so we check if we got HTML back instead of JSON.
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('text/html')) {
+          setError({
+            message: 'Authentication session expired. Please refresh to log in via Cloudflare.',
+            status: 401,
+          });
+          return null;
+        }
+
         if (!response.ok) {
+          // Handle 401/403 specifically
+          if (response.status === 401 || response.status === 403) {
+            setError({
+              message: 'Unauthorized: You do not have access to this resource.',
+              status: response.status,
+            });
+            return null;
+          }
+
           const errorData = await response.json().catch(() => ({ error: response.statusText }));
           setError({
             message: errorData.message || errorData.error || response.statusText,
@@ -54,6 +73,12 @@ export const useApi = () => {
             details: JSON.stringify(errorData),
           });
           return null;
+        }
+
+        // Return empty object for 204 No Content
+        if (response.status === 204) {
+          setError(null);
+          return {} as T;
         }
 
         const data = await response.json();
@@ -77,10 +102,9 @@ export const useApi = () => {
 /**
  * Portfolio polling hook
  * Fetches portfolio summary every 30 seconds by default
- * @param token - JWT authentication token
  * @param pollInterval - Polling interval in milliseconds (default: 30000)
  */
-export const usePortfolio = (token: string | null, pollInterval = 30000) => {
+export const usePortfolio = (pollInterval = 30000) => {
   const [portfolio, setPortfolio] = useState<PortfolioSummary | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<ApiError | null>(null);
@@ -88,12 +112,7 @@ export const usePortfolio = (token: string | null, pollInterval = 30000) => {
   const pollTimerRef = useRef<NodeJS.Timeout>();
 
   const fetchPortfolio = useCallback(async () => {
-    if (!token) {
-      setIsLoading(false);
-      return;
-    }
-
-    const data = await request<PortfolioSummary>('/api/portfolio', token);
+    const data = await request<PortfolioSummary>('/api/portfolio');
     if (data) {
       setPortfolio(data);
       setError(null);
@@ -103,14 +122,9 @@ export const usePortfolio = (token: string | null, pollInterval = 30000) => {
       });
     }
     setIsLoading(false);
-  }, [token, request]);
+  }, [request]);
 
   useEffect(() => {
-    if (!token) {
-      setIsLoading(false);
-      return;
-    }
-
     // Initial fetch
     fetchPortfolio();
 
@@ -122,7 +136,7 @@ export const usePortfolio = (token: string | null, pollInterval = 30000) => {
         clearInterval(pollTimerRef.current);
       }
     };
-  }, [token, pollInterval, fetchPortfolio]);
+  }, [pollInterval, fetchPortfolio]);
 
   /**
    * Manually refresh portfolio data
@@ -137,10 +151,9 @@ export const usePortfolio = (token: string | null, pollInterval = 30000) => {
 /**
  * Transactions fetching hook
  * Fetches historical trades with pagination and filtering
- * @param token - JWT authentication token
  * @param limit - Number of items per page (default: 50)
  */
-export const useTransactions = (token: string | null, limit = 50) => {
+export const useTransactions = (limit = 50) => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<ApiError | null>(null);
@@ -156,11 +169,6 @@ export const useTransactions = (token: string | null, limit = 50) => {
    */
   const fetch = useCallback(
     async (page = 0, bot?: string, search?: string) => {
-      if (!token) {
-        setIsLoading(false);
-        return;
-      }
-
       setIsLoading(true);
       const params = new URLSearchParams();
       params.append('page', page.toString());
@@ -169,8 +177,7 @@ export const useTransactions = (token: string | null, limit = 50) => {
       if (search) params.append('search', search);
 
       const data = await request<ListResponse<Transaction>>(
-        `/api/transactions?${params}`,
-        token
+        `/api/transactions?${params}`
       );
 
       if (data) {
@@ -185,7 +192,7 @@ export const useTransactions = (token: string | null, limit = 50) => {
       }
       setIsLoading(false);
     },
-    [token, limit, request]
+    [limit, request]
   );
 
   return { transactions, isLoading, error, total, hasMore, fetch };
@@ -194,9 +201,8 @@ export const useTransactions = (token: string | null, limit = 50) => {
 /**
  * Logs fetching hook
  * Fetches and searches logs with filtering
- * @param token - JWT authentication token
  */
-export const useLogs = (token: string | null) => {
+export const useLogs = () => {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<ApiError | null>(null);
@@ -212,11 +218,6 @@ export const useLogs = (token: string | null) => {
    */
   const fetch = useCallback(
     async (bot?: string, level?: string, search?: string, limit = 100) => {
-      if (!token) {
-        setIsLoading(false);
-        return;
-      }
-
       setIsLoading(true);
       const params = new URLSearchParams();
       params.append('limit', limit.toString());
@@ -225,8 +226,7 @@ export const useLogs = (token: string | null) => {
       if (search) params.append('search', search);
 
       const data = await request<ListResponse<LogEntry>>(
-        `/api/logs?${params}`,
-        token
+        `/api/logs?${params}`
       );
 
       if (data) {
@@ -239,7 +239,7 @@ export const useLogs = (token: string | null) => {
       }
       setIsLoading(false);
     },
-    [token, request]
+    [request]
   );
 
   /**
@@ -275,9 +275,8 @@ export const useLogs = (token: string | null) => {
 /**
  * Bot status fetching hook
  * Polls bot status every 30 seconds
- * @param token - JWT authentication token
  */
-export const useBots = (token: string | null) => {
+export const useBots = () => {
   const [bots, setBots] = useState<BotStatus[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<ApiError | null>(null);
@@ -285,12 +284,7 @@ export const useBots = (token: string | null) => {
   const pollTimerRef = useRef<NodeJS.Timeout>();
 
   const fetch = useCallback(async () => {
-    if (!token) {
-      setIsLoading(false);
-      return;
-    }
-
-    const data = await request<BotStatus[]>('/api/bots', token);
+    const data = await request<BotStatus[]>('/api/bots');
     if (data) {
       setBots(data);
       setError(null);
@@ -300,14 +294,9 @@ export const useBots = (token: string | null) => {
       });
     }
     setIsLoading(false);
-  }, [token, request]);
+  }, [request]);
 
   useEffect(() => {
-    if (!token) {
-      setIsLoading(false);
-      return;
-    }
-
     fetch();
     pollTimerRef.current = setInterval(fetch, 30000);
 
@@ -316,7 +305,7 @@ export const useBots = (token: string | null) => {
         clearInterval(pollTimerRef.current);
       }
     };
-  }, [token, fetch]);
+  }, [fetch]);
 
   /**
    * Refresh bot status immediately
@@ -331,9 +320,8 @@ export const useBots = (token: string | null) => {
 /**
  * Generic API call hook for manual requests
  * Use for one-off API calls (POST, PUT, DELETE)
- * @param token - JWT authentication token
  */
-export const useApiCall = (token: string | null) => {
+export const useApiCall = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<ApiError | null>(null);
   const { request } = useApi();
@@ -346,11 +334,6 @@ export const useApiCall = (token: string | null) => {
    */
   const call = useCallback(
     async <T,>(endpoint: string, method = 'POST', body?: any): Promise<T | null> => {
-      if (!token) {
-        setError({ message: 'Not authenticated' });
-        return null;
-      }
-
       setIsLoading(true);
       const options: RequestInit = {
         method,
@@ -360,11 +343,11 @@ export const useApiCall = (token: string | null) => {
         options.body = JSON.stringify(body);
       }
 
-      const data = await request<T>(endpoint, token, options);
+      const data = await request<T>(endpoint, options);
       setIsLoading(false);
       return data;
     },
-    [token, request]
+    [request]
   );
 
   return { call, isLoading, error, setError };

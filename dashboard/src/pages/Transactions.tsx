@@ -7,10 +7,6 @@ import React, { useState, useEffect } from 'react';
 import { useTransactions } from '../hooks/useApi';
 import { Transaction } from '../types/api';
 
-interface TransactionsPageProps {
-  token: string | null;
-}
-
 /**
  * TransactionsPage Component
  * Features:
@@ -20,8 +16,8 @@ interface TransactionsPageProps {
  * - Export to CSV
  * - Real-time updates
  */
-export const TransactionsPage: React.FC<TransactionsPageProps> = ({ token }) => {
-  const { transactions, isLoading, error, total, hasMore, fetch } = useTransactions(token, 50);
+export const TransactionsPage: React.FC = () => {
+  const { transactions, isLoading, error, total, hasMore, fetch } = useTransactions(50);
   const [page, setPage] = useState(0);
   const [botFilter, setBotFilter] = useState<string>('');
   const [sortColumn, setSortColumn] = useState<keyof Transaction>('timestamp');

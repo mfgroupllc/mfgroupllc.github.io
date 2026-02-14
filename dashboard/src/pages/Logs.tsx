@@ -7,10 +7,6 @@ import React, { useState, useEffect } from 'react';
 import { useLogs } from '../hooks/useApi';
 import { LogEntry } from '../types/api';
 
-interface LogsPageProps {
-  token: string | null;
-}
-
 /**
  * LogsPage Component
  * Features:
@@ -21,8 +17,8 @@ interface LogsPageProps {
  * - Color-coded log levels
  * - Tail last 100 lines
  */
-export const LogsPage: React.FC<LogsPageProps> = ({ token }) => {
-  const { logs, isLoading, error, fetch, startPolling, stopPolling } = useLogs(token);
+export const LogsPage: React.FC = () => {
+  const { logs, isLoading, error, fetch, startPolling, stopPolling } = useLogs();
   const [botFilter, setBotFilter] = useState<string>('');
   const [levelFilter, setLevelFilter] = useState<string>('');
   const [searchText, setSearchText] = useState('');

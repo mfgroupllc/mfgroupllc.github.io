@@ -262,7 +262,7 @@ class ErrorBoundary extends React.Component<
  * Main App Component
  */
 export const App: React.FC = () => {
-  const { user, token, isLoading, isAuthenticated, logout } = useAuth();
+  const { user, isLoading, isAuthenticated, logout } = useAuth();
 
   if (isLoading) {
     return (
@@ -299,7 +299,7 @@ export const App: React.FC = () => {
                 isAuthenticated={isAuthenticated}
                 element={
                   <Layout user={user} onLogout={logout}>
-                    <PortfolioPage token={token} />
+                    <PortfolioPage />
                   </Layout>
                 }
               />
@@ -313,7 +313,7 @@ export const App: React.FC = () => {
                 isAuthenticated={isAuthenticated}
                 element={
                   <Layout user={user} onLogout={logout}>
-                    <TransactionsPage token={token} />
+                    <TransactionsPage />
                   </Layout>
                 }
               />
@@ -327,7 +327,7 @@ export const App: React.FC = () => {
                 isAuthenticated={isAuthenticated}
                 element={
                   <Layout user={user} onLogout={logout}>
-                    <LogsPage token={token} />
+                    <LogsPage />
                   </Layout>
                 }
               />
@@ -341,7 +341,7 @@ export const App: React.FC = () => {
                 isAuthenticated={isAuthenticated}
                 element={
                   <Layout user={user} onLogout={logout}>
-                    <BotControlPage token={token} />
+                    <BotControlPage />
                   </Layout>
                 }
               />
@@ -355,7 +355,7 @@ export const App: React.FC = () => {
                 isAuthenticated={isAuthenticated}
                 element={
                   <Layout user={user} onLogout={logout}>
-                    <SettingsPage user={user} token={token} onLogout={logout} />
+                    <SettingsPage user={user} onLogout={logout} />
                   </Layout>
                 }
               />

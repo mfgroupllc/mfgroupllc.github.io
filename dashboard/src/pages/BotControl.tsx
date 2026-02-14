@@ -7,9 +7,6 @@ import React, { useState } from 'react';
 import { useBots, useApiCall } from '../hooks/useApi';
 import { BotStatus, CycleResult, GitPullResult } from '../types/api';
 
-interface BotControlPageProps {
-  token: string | null;
-}
 
 /**
  * Confirmation Dialog Component
@@ -70,9 +67,9 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
  * - Manual cycle trigger
  * - Last cycle result display
  */
-export const BotControlPage: React.FC<BotControlPageProps> = ({ token }) => {
-  const { bots, isLoading, error, refresh } = useBots(token);
-  const { call: apiCall, isLoading: isApiLoading } = useApiCall(token);
+export const BotControlPage: React.FC = () => {
+  const { bots, isLoading, error, refresh } = useBots();
+  const { call: apiCall, isLoading: isApiLoading } = useApiCall();
   const [dialog, setDialog] = useState<{
     title: string;
     message: string;

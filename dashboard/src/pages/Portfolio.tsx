@@ -8,10 +8,6 @@ import { usePortfolio, useBots } from '../hooks/useApi';
 import { Position, PortfolioPnlPoint } from '../types/api';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
-interface PortfolioPageProps {
-  token: string | null;
-}
-
 /**
  * PortfolioPage Component
  * Shows:
@@ -21,9 +17,9 @@ interface PortfolioPageProps {
  * - 30-day P&L chart
  * - Real-time updates every 30s
  */
-export const PortfolioPage: React.FC<PortfolioPageProps> = ({ token }) => {
-  const { portfolio, isLoading, error, refresh } = usePortfolio(token, 30000);
-  const { bots } = useBots(token);
+export const PortfolioPage: React.FC = () => {
+  const { portfolio, isLoading, error, refresh } = usePortfolio(30000);
+  const { bots } = useBots();
   const [selectedBot, setSelectedBot] = useState<'all' | 'kalshi' | 'crypto' | 'grid'>('all');
 
   // Mock P&L data - in production, fetch from /api/portfolio/pnl-history

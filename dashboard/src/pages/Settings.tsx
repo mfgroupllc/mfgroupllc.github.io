@@ -8,7 +8,6 @@ import { User } from '../types/api';
 
 interface SettingsPageProps {
   user: User | null;
-  token: string | null;
   onLogout: () => void;
 }
 
@@ -21,7 +20,7 @@ interface SettingsPageProps {
  * - Notification settings
  * - Logout button
  */
-export const SettingsPage: React.FC<SettingsPageProps> = ({ user, token, onLogout }) => {
+export const SettingsPage: React.FC<SettingsPageProps> = ({ user, onLogout }) => {
   const [apiUrl, setApiUrl] = useState(import.meta.env.VITE_API_URL || 'http://localhost:8000');
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
