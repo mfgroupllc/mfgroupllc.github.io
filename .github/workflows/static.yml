@@ -43,7 +43,7 @@ jobs:
         run: |
           cd dashboard
           npm ci
-          npm run build
+          VITE_API_URL=https://api.mfgrpllc.com npm run build
 
       - name: Prepare deployment files
         run: |
