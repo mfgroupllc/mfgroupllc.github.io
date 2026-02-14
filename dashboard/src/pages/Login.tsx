@@ -1,14 +1,19 @@
 /**
  * Login Page
- * GitHub OAuth authentication flow with beautiful UI
+ * Cloudflare Access Gateway Entry Point
+ *
+ * Since authentication is handled at the network edge by Cloudflare,
+ * this page serves as a bridge to trigger the Cloudflare SSO flow.
  */
 
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
 /**
  * LoginPage Component
- * Displays login interface and handles GitHub OAuth redirect
+ * Redirects users to API to trigger Cloudflare Access authentication
  */
 export const LoginPage: React.FC = () => {
   const { isLoading, error, isAuthenticated } = useAuth();
@@ -26,22 +31,18 @@ export const LoginPage: React.FC = () => {
     }
   }, [isAuthenticated]);
 
-  const handleLogin = async () => {
-    try {
-      // With Cloudflare Access, authentication happens automatically
-      // Just redirect to the protected route
-      window.location.href = '/dashboard/portfolio';
-    } catch (err) {
-      console.error('Login failed:', err);
-    }
+  const handleLogin = () => {
+    // Redirect to API domain to trigger Cloudflare Access authentication
+    // The API should redirect back to the dashboard after successful auth
+    window.location.href = API_URL;
   };
 
   if (isRedirecting) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4 mx-auto"></div>
-          <p className="text-white text-lg">Redirecting to portfolio...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mb-4 mx-auto"></div>
+          <p className="text-white text-lg">Authenticating with Gateway...</p>
         </div>
       </div>
     );
@@ -54,7 +55,7 @@ export const LoginPage: React.FC = () => {
           {/* Header */}
           <div className="text-center mb-8">
             <div className="flex justify-center mb-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center shadow-lg">
+              <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-amber-500 rounded-lg flex items-center justify-center shadow-lg">
                 <svg
                   className="w-8 h-8 text-white"
                   fill="none"
@@ -65,13 +66,13 @@ export const LoginPage: React.FC = () => {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth={2}
-                    d="M13 10V3L4 14h7v7l9-11h-7z"
+                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
                   />
                 </svg>
               </div>
             </div>
-            <h1 className="text-3xl font-bold text-white mb-2">Trading Portfolio</h1>
-            <p className="text-slate-400">Real-time multi-bot trading dashboard</p>
+            <h1 className="text-3xl font-bold text-white mb-2">Secure Access</h1>
+            <p className="text-slate-400">Cloudflare Zero Trust Gateway</p>
           </div>
 
           {/* Features */}
@@ -111,27 +112,30 @@ export const LoginPage: React.FC = () => {
             </div>
           )}
 
+          {/* Info Block */}
+          <div className="mb-8 bg-slate-900/50 p-4 rounded-md border border-slate-700">
+            <p className="text-slate-300 text-sm text-center">
+              This dashboard is protected by Cloudflare Access. You must authenticate via the secure gateway to view portfolio data.
+            </p>
+          </div>
+
           {/* Login Button */}
           <button
             onClick={handleLogin}
             disabled={isLoading}
-            className="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 disabled:from-slate-600 disabled:to-slate-600 text-white font-semibold rounded-lg transition-all duration-200 flex items-center justify-center gap-2 mb-4 shadow-lg"
+            className="w-full py-3 px-4 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 disabled:from-slate-600 disabled:to-slate-600 text-white font-semibold rounded-lg transition-all duration-200 flex items-center justify-center gap-2 mb-4 shadow-lg"
           >
             {isLoading ? (
               <>
                 <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                Logging in...
+                Checking Access...
               </>
             ) : (
               <>
-                <svg
-                  className="w-5 h-5"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path d="M10 0C4.477 0 0 4.484 0 10.017c0 4.425 2.865 8.18 6.839 9.49.5.092.682-.217.682-.482 0-.237-.008-.868-.013-1.703-2.782.603-3.369-1.343-3.369-1.343-.454-1.156-1.11-1.463-1.11-1.463-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.545 2.91 1.184.092-.923.35-1.545.636-1.9-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.268.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0110 4.817c.85.004 1.705.114 2.504.336 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.203 2.398.1 2.651.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C17.138 18.192 20 14.436 20 10.017 20 4.484 15.522 0 10 0z" />
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
                 </svg>
-                Login with GitHub
+                Log In via Cloudflare
               </>
             )}
           </button>
@@ -139,10 +143,7 @@ export const LoginPage: React.FC = () => {
           {/* Footer */}
           <div className="pt-6 border-t border-slate-700">
             <p className="text-slate-500 text-xs text-center">
-              Secure authentication via GitHub OAuth
-            </p>
-            <p className="text-slate-600 text-xs text-center mt-2">
-              Your API key is securely stored and never shared
+              You will be redirected to the API gateway for authentication.
             </p>
           </div>
         </div>
