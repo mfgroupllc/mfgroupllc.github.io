@@ -19,7 +19,6 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
  */
 export const PortfolioPage: React.FC = () => {
   const { portfolio, isLoading, error, refresh } = usePortfolio(30000);
-  const { bots } = useBots();
   const [selectedBot, setSelectedBot] = useState<'all' | 'kalshi' | 'crypto' | 'grid'>('all');
 
   // Mock P&L data - in production, fetch from /api/portfolio/pnl-history

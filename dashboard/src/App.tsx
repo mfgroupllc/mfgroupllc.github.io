@@ -3,7 +3,7 @@
  * React Router setup with protected routes, navigation, and error handling
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from './hooks/useAuth';
 

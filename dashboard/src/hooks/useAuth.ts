@@ -39,7 +39,13 @@ export const useAuth = () => {
           setError(null);
         } else if (response.status === 404) {
           // Endpoint might not exist yet, but we're authenticated
-          setUser({ email: 'authenticated@cloudflare', name: 'Cloudflare User' });
+          setUser({
+            id: 'cloudflare-user',
+            github_username: 'Cloudflare User',
+            github_avatar_url: '',
+            created_at: new Date().toISOString(),
+            last_login: new Date().toISOString()
+          });
           setError(null);
         } else {
           setError('Unable to access API. Please ensure you are authenticated via Cloudflare.');

@@ -11,7 +11,7 @@ import { useAuth } from '../hooks/useAuth';
  * Displays login interface and handles GitHub OAuth redirect
  */
 export const LoginPage: React.FC = () => {
-  const { login, isLoading, error, isAuthenticated } = useAuth();
+  const { isLoading, error, isAuthenticated } = useAuth();
   const [isRedirecting, setIsRedirecting] = useState(false);
 
   /**
@@ -28,7 +28,9 @@ export const LoginPage: React.FC = () => {
 
   const handleLogin = async () => {
     try {
-      login();
+      // With Cloudflare Access, authentication happens automatically
+      // Just redirect to the protected route
+      window.location.href = '/dashboard/portfolio';
     } catch (err) {
       console.error('Login failed:', err);
     }

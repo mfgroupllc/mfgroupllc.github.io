@@ -25,7 +25,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ user, onLogout }) =>
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [telegramNotifications, setTelegramNotifications] = useState(true);
-  const [emailNotifications, setEmailNotifications] = useState(false);
+  const [emailNotifications] = useState(false);
   const [savedMessage, setSavedMessage] = useState('');
 
   const handleSaveSettings = () => {
@@ -89,7 +89,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ user, onLogout }) =>
               <p className="text-slate-400 text-sm mb-3">Authentication Token</p>
               <div className="bg-slate-700/50 rounded p-3 mb-3">
                 <p className="text-slate-400 text-xs font-mono break-all">
-                  {token ? token.substring(0, 20) + '...' : 'No token'}
+                  {localStorage.getItem('auth_token') ? localStorage.getItem('auth_token')!.substring(0, 20) + '...' : 'No token (Cloudflare Access)'}
                 </p>
               </div>
               <p className="text-slate-500 text-xs">

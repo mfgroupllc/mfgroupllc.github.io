@@ -5,7 +5,7 @@
 
 import React, { useState } from 'react';
 import { useBots, useApiCall } from '../hooks/useApi';
-import { BotStatus, CycleResult, GitPullResult } from '../types/api';
+import { BotStatus } from '../types/api';
 
 
 /**
@@ -165,18 +165,16 @@ export const BotControlPage: React.FC = () => {
     if (!dialog) return;
 
     try {
-      let response = null;
-
       if (dialog.action === 'pause' && dialog.botName) {
-        response = await apiCall(`/api/bots/${dialog.botName}/pause`, 'POST');
+        await apiCall(`/api/bots/${dialog.botName}/pause`, 'POST');
       } else if (dialog.action === 'resume' && dialog.botName) {
-        response = await apiCall(`/api/bots/${dialog.botName}/resume`, 'POST');
+        await apiCall(`/api/bots/${dialog.botName}/resume`, 'POST');
       } else if (dialog.action === 'restart' && dialog.botName) {
-        response = await apiCall(`/api/bots/${dialog.botName}/restart`, 'POST');
+        await apiCall(`/api/bots/${dialog.botName}/restart`, 'POST');
       } else if (dialog.action === 'git-pull') {
-        response = await apiCall('/api/deploy/git-pull', 'POST');
+        await apiCall('/api/deploy/git-pull', 'POST');
       } else if (dialog.action === 'scan' && dialog.botName) {
-        response = await apiCall(`/api/bots/${dialog.botName}/scan`, 'POST');
+        await apiCall(`/api/bots/${dialog.botName}/scan`, 'POST');
       }
 
       setOperationResult({
